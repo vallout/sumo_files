@@ -1,0 +1,10 @@
+<edgedata>
+  <interval/>
+    <edge id="right_east" value="0.16"/>
+    <edge id="right_north" value="0.16"/>
+    <edge id="right_south" value="0.16"/>
+    <edge id="left_south" value="0.16"/>
+    <edge id="left_north" value="0.16"/>
+    <edge id="left_west" value="0.16"/>
+  </interval>
+</edgedata>
