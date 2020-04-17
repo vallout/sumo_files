@@ -34,22 +34,22 @@ inflow = InFlows()
 
 inflow.add(veh_type="human",
            edge="right_east",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="right_south",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="right_north",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_north",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_south",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_west",
-           probability=0.04)
+           probability=0.5)
 
 net_params = NetParams(
     inflows=inflow,
@@ -72,7 +72,7 @@ env_name = SimpleEnv
 # Creating flow_params. Make sure the dictionary keys are as specified. 
 flow_params = dict(
     # name of the experiment
-    exp_tag="fixed_worker_scaling",
+    exp_tag="5_vehicles",
     # name of the flow environment the experiment is running on
     env_name=env_name,
     # name of the network class the experiment uses
@@ -113,9 +113,9 @@ from ray.tune.schedulers import PopulationBasedTraining
 
 
 # number of parallel workers
-N_CPUS = 80
+N_CPUS = 20
 # number of gpus used in general
-N_GPUS = 0
+N_GPUS = 1
 # number of rollouts per training iteration
 N_ROLLOUTS = 2
 
@@ -148,8 +148,8 @@ BATCH_SIZE = HORIZON * N_ROLLOUTS
 agent_cls = get_agent_class(alg_run)
 config = agent_cls._default_config.copy()
 config["lr"] = 5e-3
-config["num_workers"] = tune.grid_search([0, 3, 6, 9])  # number of parallel workers
-config["num_gpus"] = 0
+config["num_workers"] = 5  # number of parallel workers
+config["num_gpus"] = 1
 config["train_batch_size"] = 32  # batch size
 config["sample_batch_size"] = 4  # batch size
 config["gamma"] = 0.997  # discount rate
