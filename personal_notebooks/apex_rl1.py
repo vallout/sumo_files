@@ -180,7 +180,7 @@ exp = Experiment(flow_params["exp_tag"], **{
         "checkpoint_at_end": True,  # generate a checkpoint at the end
         "max_failures": 5,
         "stop": {  # stopping conditions
-            "training_iteration": 200,  # number of iterations to stop after
+            "training_iteration": 40,  # number of iterations to stop after
         },
         "num_samples": 1, 
         "local_dir": "/tmp/ray_results"
