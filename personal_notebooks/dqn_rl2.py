@@ -34,22 +34,22 @@ inflow = InFlows()
 
 inflow.add(veh_type="human",
            edge="right_east",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="right_south",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="right_north",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_north",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_south",
-           probability=0.04)
+           probability=0.5)
 inflow.add(veh_type="human",
            edge="left_west",
-           probability=0.04)
+           probability=0.5)
 
 net_params = NetParams(
     inflows=inflow,
@@ -72,7 +72,7 @@ env_name = SimpleEnv
 # Creating flow_params. Make sure the dictionary keys are as specified. 
 flow_params = dict(
     # name of the experiment
-    exp_tag="XXXXXXXXXXXXXXXXXXX",
+    exp_tag="5_vehicles",
     # name of the flow environment the experiment is running on
     env_name=env_name,
     # name of the network class the experiment uses
@@ -113,9 +113,9 @@ from ray.tune.schedulers import PopulationBasedTraining
 
 
 # number of parallel workers
-N_CPUS = 80
+N_CPUS = 20
 # number of gpus used in general
-N_GPUS = 8
+N_GPUS = 1
 # number of rollouts per training iteration
 N_ROLLOUTS = 2
 
@@ -141,19 +141,19 @@ pbt = PopulationBasedTraining(
     )
 
 
-alg_run = "APEX"
+alg_run = "DQN"
 
 BATCH_SIZE = HORIZON * N_ROLLOUTS
 
 agent_cls = get_agent_class(alg_run)
 config = agent_cls._default_config.copy()
-config["lr"] = 0.01
-config["num_workers"] = 12  # number of parallel workers
-config["num_gpus"] = 0
-config["train_batch_size"] = 512  # batch size
-config["sample_batch_size"] = 50  # batch size
+config["lr"] = 5e-3
+config["num_workers"] = 5  # number of parallel workers
+config["num_gpus"] = 1
+config["train_batch_size"] = 32  # batch size
+config["sample_batch_size"] = 4  # batch size
 config["gamma"] = 0.997  # discount rate
-config["model"].update({"fcnet_hiddens": [128]})  # size of hidden layers in network
+config["model"].update({"fcnet_hiddens": [128, 128]})  # size of hidden layers in network
 config["log_level"] = "DEBUG"
 config["horizon"] = HORIZON  # rollout horizon
 config["timesteps_per_iteration"] = BATCH_SIZE
@@ -177,11 +177,11 @@ exp = Experiment(flow_params["exp_tag"], **{
         "config": {
             **config
         },
-        "checkpoint_freq": 200,  # number of iterations between checkpoints
+        "checkpoint_freq": 5,  # number of iterations between checkpoints
         "checkpoint_at_end": True,  # generate a checkpoint at the end
         "max_failures": 5,
         "stop": {  # stopping conditions
-            "training_iteration": 200,  # number of iterations to stop after
+            "training_iteration": 400,  # number of iterations to stop after
         },
         "num_samples": 1, 
         "local_dir": "/tmp/ray_results"
