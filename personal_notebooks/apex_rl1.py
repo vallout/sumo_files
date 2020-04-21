@@ -17,7 +17,7 @@ HORIZON=3000
 env_params = EnvParams(horizon=HORIZON)
 initial_config = InitialConfig()
 
-le_dir = "/Schreibtisch/wrapper/Schreibtisch/personal_sumo_files"
+le_dir = "/Schreibtisch/wrapper/Schreibtisch/sumo_files/personal_sumo_files"
 
 
 from flow.core.params import SumoParams
@@ -71,7 +71,7 @@ env_name = SimpleEnv
 # Creating flow_params. Make sure the dictionary keys are as specified. 
 flow_params = dict(
     # name of the experiment
-    exp_tag="XXXXXXXXXXXXXXXXXXX",
+    exp_tag="worker_scaling_apex1",
     # name of the flow environment the experiment is running on
     env_name=env_name,
     # name of the network class the experiment uses
