@@ -141,7 +141,7 @@ pbt = PopulationBasedTraining(
     )
 
 
-alg_run = "APEX"
+alg_run = "DQN"
 
 BATCH_SIZE = HORIZON * N_ROLLOUTS
 
@@ -150,8 +150,8 @@ config = agent_cls._default_config.copy()
 config["lr"] = 0.01
 config["num_workers"] = 12  # number of parallel workers
 config["num_gpus"] = 0
-config["train_batch_size"] = 512  # batch size
-config["sample_batch_size"] = 50  # batch size
+config["train_batch_size"] = 32  # batch size
+config["sample_batch_size"] = 4  # batch size
 config["gamma"] = 0.997  # discount rate
 config["model"].update({"fcnet_hiddens": [128]})  # size of hidden layers in network
 config["log_level"] = "DEBUG"
