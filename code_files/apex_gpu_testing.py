@@ -12,7 +12,6 @@ from flow.core.params import TrafficLightParams
 from flow.controllers import IDMController
 from flow.core.params import SumoCarFollowingParams
 from ray import tune
-import numpy as np
 
 HORIZON=3000
 env_params = EnvParams(horizon=HORIZON)
@@ -72,7 +71,7 @@ env_name = SimpleEnv
 # Creating flow_params. Make sure the dictionary keys are as specified. 
 flow_params = dict(
     # name of the experiment
-    exp_tag="XXXXXXXXXXXXXXXXXXX",
+    exp_tag="gpu_testing_apex",
     # name of the flow environment the experiment is running on
     env_name=env_name,
     # name of the network class the experiment uses
@@ -141,22 +140,23 @@ pbt = PopulationBasedTraining(
     )
 
 
-alg_run = "DQN"
+alg_run = "APEX"
 
 BATCH_SIZE = HORIZON * N_ROLLOUTS
+
+configs = []
 
 agent_cls = get_agent_class(alg_run)
 config = agent_cls._default_config.copy()
 config["lr"] = 0.01
-config["num_workers"] = 12  # number of parallel workers
-config["num_gpus"] = 0
-config["train_batch_size"] = 32  # batch size
-config["sample_batch_size"] = 4  # batch size
+config["num_workers"] = 60  # number of parallel workers
+config["num_gpus"] = tune.grid_search([1, 0])
+config["num_gpus_per_worker"] = tune.grid_search([0.1, 0])
+config["train_batch_size"] = tune.grid_search([128, 256, 512])  # batch size
+config["sample_batch_size"] = 50  # batch size
 config["gamma"] = 0.997  # discount rate
 config["model"].update({"fcnet_hiddens": [128]})  # size of hidden layers in network
-config["log_level"] = "DEBUG"
 config["horizon"] = HORIZON  # rollout horizon
-config["timesteps_per_iteration"] = BATCH_SIZE
 
 # save the flow params for replay
 flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True,
@@ -172,20 +172,22 @@ config["env"] = gym_name
 # Register as rllib env with Gym
 register_env(gym_name, create_env)
 
+
 exp = Experiment(flow_params["exp_tag"], **{
         "run": alg_run,
         "config": {
             **config
         },
-        "checkpoint_freq": 200,  # number of iterations between checkpoints
+        "checkpoint_freq": 2,  # number of iterations between checkpoints
         "checkpoint_at_end": True,  # generate a checkpoint at the end
         "max_failures": 5,
+        "keep_checkpoints_num": 4,
         "stop": {  # stopping conditions
-            "training_iteration": 200,  # number of iterations to stop after
+            "timesteps_total": 2400000,  # number of iterations to stop after
         },
-        "num_samples": 1, 
+        "num_samples": 10, 
         "local_dir": "/tmp/ray_results"
-        })
+    })
 
 
 trials = run_experiments(exp)

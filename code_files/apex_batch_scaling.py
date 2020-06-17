@@ -71,7 +71,7 @@ env_name = SimpleEnv
 # Creating flow_params. Make sure the dictionary keys are as specified. 
 flow_params = dict(
     # name of the experiment
-    exp_tag="worker_scaling_apex1",
+    exp_tag="train_batch_scaling_apex",
     # name of the flow environment the experiment is running on
     env_name=env_name,
     # name of the network class the experiment uses
@@ -144,50 +144,75 @@ alg_run = "APEX"
 
 BATCH_SIZE = HORIZON * N_ROLLOUTS
 
+configs = []
+
 agent_cls = get_agent_class(alg_run)
-config = agent_cls._default_config.copy()
-config["lr"] = 0.01
-config["num_workers"] = tune.grid_search([10, 20, 30, 40, 50, 60, 70, 80])  # number of parallel workers
-config["num_gpus"] = 1
-config["train_batch_size"] = 512  # batch size
-config["sample_batch_size"] = 50  # batch size
-config["gamma"] = 0.997  # discount rate
-config["model"].update({"fcnet_hiddens": [128]})  # size of hidden layers in network
-config["log_level"] = "DEBUG"
-config["horizon"] = HORIZON  # rollout horizon
-config["timesteps_per_iteration"] = BATCH_SIZE
+config16 = agent_cls._default_config.copy()
+config16["lr"] = 0.01
+config16["num_workers"] = 60  # number of parallel workers
+config16["num_gpus"] = 8
+config16["train_batch_size"] = 16  # batch size
+config16["sample_batch_size"] = 50  # batch size
+config16["gamma"] = 0.997  # discount rate
+config16["model"].update({"fcnet_hiddens": [128]})  # size of hidden layers in network
+config16["horizon"] = HORIZON  # rollout horizon
 
 # save the flow params for replay
 flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True,
                        indent=4)  # generating a string version of flow_params
-config['env_config']['flow_params'] = flow_json  # adding the flow_params to config dict
-config['env_config']['run'] = alg_run
+config16['env_config']['flow_params'] = flow_json  # adding the flow_params to config dict
+config16['env_config']['run'] = alg_run
 
 # Call the utility function make_create_env to be able to 
 # register the Flow env for this experiment
 create_env, gym_name = make_create_env(params=flow_params, version=0)
 
-config["env"] = gym_name
+config16["env"] = gym_name
 # Register as rllib env with Gym
 register_env(gym_name, create_env)
 
-exp = Experiment(flow_params["exp_tag"], **{
-        "run": alg_run,
-        "config": {
-            **config
-        },
-        "checkpoint_freq": 200,  # number of iterations between checkpoints
-        "checkpoint_at_end": True,  # generate a checkpoint at the end
-        "max_failures": 5,
-        "stop": {  # stopping conditions
-            "timesteps_total": 2000000,  # number of iterations to stop after
-        },
-        "num_samples": 1, 
-        "local_dir": "/tmp/ray_results"
+configs.append(config16)
+config32 = config16.copy()
+config32["train_batch_size"] = 32
+configs.append(config32)
+config64 = config16.copy()
+config64["train_batch_size"] = 64
+configs.append(config64)
+config128 = config16.copy()
+config128["train_batch_size"] = 128
+configs.append(config128)
+config256 = config16.copy()
+config256["train_batch_size"] = 256
+configs.append(config256)
+config512 = config16.copy()
+config512["train_batch_size"] = 512
+configs.append(config512)
+config1024 = config16.copy()
+config1024["train_batch_size"] = 1024
+configs.append(config1024)
+config2048 = config16.copy()
+config2048["train_batch_size"] = 2048
+configs.append(config2048)
+
+
+for config in configs:
+    exp = Experiment("train_batch_scaling_apex_{}".format(config["train_batch_size"]), **{
+            "run": alg_run,
+            "config": {
+                **config
+            },
+            "checkpoint_freq": 2,  # number of iterations between checkpoints
+            "checkpoint_at_end": True,  # generate a checkpoint at the end
+            "max_failures": 5,
+            "keep_checkpoints_num": 4,
+            "stop": {  # stopping conditions
+                "timesteps_total": 2400000,  # number of iterations to stop after
+            },
+            "num_samples": 10, 
+            "local_dir": "/tmp/ray_results"
         })
 
-
-trials = run_experiments(exp)
+    trials = run_experiments(exp)
 
 
 
